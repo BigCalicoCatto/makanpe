@@ -1,10 +1,20 @@
 import React, { useState } from 'react';
 import { RefreshCw, Menu, X } from 'lucide-react';
 
+type FoodItem = { name: string; emoji: string };
+type GiftItem = { name: string; budget: string; occasion: string; emoji: string; price: string; link: string };
+type StoryItem = { text: string };
+
+type SelectedItem =
+  | { type: 'food'; data: FoodItem }
+  | { type: 'gift'; data: GiftItem }
+  | { type: 'story'; data: StoryItem }
+  | null;
+
 const MegaRandomizer = () => {
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState('semua');
-  const [currentView, setCurrentView] = useState('food');
+  const [selectedItem, setSelectedItem] = useState<SelectedItem>(null);
+  const [selectedCategory, setSelectedCategory] = useState<'semua' | 'mamak' | 'tomyam' | 'fastfood'>('semua');
+  const [currentView, setCurrentView] = useState<'food' | 'brainrot' | 'gift'>('food');
   const [isAnimating, setIsAnimating] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [giftFilters, setGiftFilters] = useState({ budget: 'all', occasion: 'all' });
@@ -78,13 +88,6 @@ const MegaRandomizer = () => {
     { text: "Arwah ayah aku suka sangat makan soto. Setiap weekend mesti beli kat gerai Pak Mat. Lepas ayah meninggal, aku still pergi gerai tu. Pak Mat dah tua, tangan dia menggeletar. Aku order soto macam biasa. Dia pandang aku lama, mata dia berair. Dia cakap 'Awak macam arwah ayah awak dulu. Dia selalu duduk kerusi tu.' Aku tengok kerusi sebelah aku kosong, tapi rasa macam ada warmth. Pak Mat bagi extra daging, cakap 'Dari ayah awak.' Aku makan perlahan. Teringat semua kenangan. Soto tu masin sikit hari tu. Entah air mata sapa." },
   ];
 
-  const foodCategories = [
-    { id: 'semua', name: 'Semua' },
-    { id: 'mamak', name: 'Kedai Mamak' },
-    { id: 'tomyam', name: 'Kedai Tomyam' },
-    { id: 'fastfood', name: 'Fast Food' },
-  ];
-
   const getAllFood = () => {
     return [...foodData.mamak, ...foodData.tomyam, ...foodData.fastfood];
   };
@@ -101,7 +104,11 @@ const MegaRandomizer = () => {
     setIsAnimating(true);
     
     if (currentView === 'food') {
-      let foodList = selectedCategory === 'semua' ? getAllFood() : foodData[selectedCategory];
+      let foodList = selectedCategory === 'semua' 
+        ? getAllFood() 
+        : selectedCategory === 'mamak' ? foodData.mamak
+        : selectedCategory === 'tomyam' ? foodData.tomyam
+        : foodData.fastfood;
       const randomIndex = Math.floor(Math.random() * foodList.length);
       setTimeout(() => {
         setSelectedItem({ type: 'food', data: foodList[randomIndex] });
@@ -128,13 +135,13 @@ const MegaRandomizer = () => {
     }
   };
 
-  const switchView = (view) => {
+  const switchView = (view: 'food' | 'brainrot' | 'gift') => {
     setCurrentView(view);
     setSelectedItem(null);
     setMenuOpen(false);
   };
 
-  const selectCategory = (catId) => {
+  const selectCategory = (catId: 'semua' | 'mamak' | 'tomyam' | 'fastfood') => {
     setSelectedCategory(catId);
     setMenuOpen(false);
   };
@@ -146,7 +153,9 @@ const MegaRandomizer = () => {
   };
 
   const getViewSubtitle = () => {
-    if (currentView === 'food') return foodCategories.find(c => c.id === selectedCategory)?.name || 'Semua';
+    if (currentView === 'food') return selectedCategory === 'semua' ? 'Semua' : 
+      selectedCategory === 'mamak' ? 'Kedai Mamak' :
+      selectedCategory === 'tomyam' ? 'Kedai Tomyam' : 'Fast Food';
     if (currentView === 'brainrot') return 'Baca cerita cursed';
     if (currentView === 'gift') return 'Hadiah untuk boyfriend/girlfriend';
   };
@@ -213,10 +222,15 @@ const MegaRandomizer = () => {
               <>
                 <div className="text-sm text-gray-500 mb-2 font-medium">Kategori Makanan</div>
                 <div className="space-y-2">
-                  {foodCategories.map(cat => (
+                  {[
+                    { id: 'semua', name: 'Semua' },
+                    { id: 'mamak', name: 'Kedai Mamak' },
+                    { id: 'tomyam', name: 'Kedai Tomyam' },
+                    { id: 'fastfood', name: 'Fast Food' },
+                  ].map(cat => (
                     <button
                       key={cat.id}
-                      onClick={() => selectCategory(cat.id)}
+                      onClick={() => selectCategory(cat.id as any)}
                       className={`w-full text-left p-3 rounded-lg transition-all text-sm ${
                         selectedCategory === cat.id ? 'bg-orange-100 text-orange-700 font-medium' : 'bg-gray-50 hover:bg-gray-100'
                       }`}
